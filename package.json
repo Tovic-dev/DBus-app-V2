@@ -48,5 +48,8 @@
     "jest-expo": "~57.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "@expo/ui": "57.0.13"
+  }
 }
