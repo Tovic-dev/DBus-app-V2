@@ -25,12 +25,19 @@ jobs:
     runs-on: macos-26 # Xcode 26 → SDK de iOS 26 (Liquid Glass)
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
+
+      - name: Usar el Xcode estable más reciente del runner
+        run: |
+          ls -d /Applications/Xcode*.app
+          XC=$(ls -d /Applications/Xcode_*.app | grep -vi -E 'beta|rc' | sort -V | tail -1)
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
 
       - name: Instalar dependencias
         run: npm ci
@@ -45,11 +52,9 @@ jobs:
 
       - name: Compilar en Release (sin firmar)
         run: |
-          xcodebuild -version
           WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
           SCHEME=$(basename "$WORKSPACE" .xcworkspace)
           echo "Workspace: $WORKSPACE · Scheme: $SCHEME"
-          set -o pipefail
           xcodebuild \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
@@ -60,7 +65,22 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build | tail -n 80
+            build > build.log 2>&1 || {
+              echo "::group::Errores del compilador"
+              grep -n -B4 -A12 -E "error:|fatal error" build.log | head -400
+              echo "::endgroup::"
+              tail -n 30 build.log
+              exit 1
+            }
+          tail -n 5 build.log
+
+      - name: Guardar log completo si falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log-${{ github.run_number }}
+          path: build.log
+          if-no-files-found: ignore
 
       - name: Empaquetar .ipa
         run: |
