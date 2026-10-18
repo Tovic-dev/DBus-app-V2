@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "DBus",
+    "slug": "dbus-app",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "dbus-app",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tovicdev.dbus"
+    },
+    "android": {
+      "package": "com.tovicdev.dbus"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "DBus usa tu ubicación para mostrar las paradas más cercanas."
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}
