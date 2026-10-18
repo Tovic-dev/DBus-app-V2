@@ -4,7 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SFSymbolIcon, type SFSymbolName } from '../../src/components/SFSymbolIcon';
-import { useStops, useDepartures, useReachableStops } from '../../src/hooks';
+import { useStops, useDepartures, useReachableStops, lineKey } from '../../src/hooks';
 import { RouteBadge, Section } from '../../src/components/ui-badges';
 import { Loading, Empty } from '../../src/components/ui-input';
 import { GlassCard } from '../../src/components/glass/GlassCard';
@@ -41,14 +41,14 @@ export default function PlanScreen() {
   const [timeOpen, setTimeOpen] = useState(false);
   const [chosenDate, setChosenDate] = useState<Date>(() => new Date());
 
-  const at = stableNow(chosenDate);
-
   const stopsQ = useStops(500);
   const allStops = stopsQ.data?.stops ?? [];
 
-  // Filtrado inteligente: con origen elegido, solo destinos alcanzables
-  // (paradas de las líneas que sirven el origen). Sin origen → todas.
-  const reachable = useReachableStops(from?.stop_id ?? null, at);
+  // Filtrado inteligente: con origen elegido, solo destinos alcanzables sin
+  // transbordo (paradas posteriores en las líneas que pasan por el origen),
+  // calculado con todo el horario → no depende de la hora elegida.
+  // Si la consulta falla, stopIds es null y se muestran todas las paradas.
+  const reachable = useReachableStops(from?.stop_id ?? null);
   const baseStops = from && reachable.stopIds
     ? allStops.filter((s) => reachable.stopIds!.has(s.stop_id))
     : allStops;
@@ -191,7 +191,7 @@ export default function PlanScreen() {
       </Modal>
 
       {from && to && (
-        <Itinerary origin={from} dest={to} mode={mode} target={chosenDate} onPickRoute={(rid) => router.push(`/routes/${rid}`)} />
+        <Itinerary origin={from} dest={to} mode={mode} target={chosenDate} lines={reachable.linesTo(to.stop_id)} onPickRoute={(rid) => router.push(`/routes/${rid}`)} />
       )}
     </ScrollView>
 
@@ -235,8 +235,11 @@ function estimateTripMin(origin: Stop, dest: Stop): number {
   return Math.max(6, Math.round(inVehicleMin + walkMin));
 }
 
-function Itinerary({ origin, dest, mode, target, onPickRoute }: {
-  origin: Stop; dest: Stop; mode: Mode; target: Date; onPickRoute: (routeId: string) => void;
+function Itinerary({ origin, dest, mode, target, lines, onPickRoute }: {
+  origin: Stop; dest: Stop; mode: Mode; target: Date;
+  /** Lines (route|direction) that go from origin to dest; null = unknown (no filter). */
+  lines: Set<string> | null;
+  onPickRoute: (routeId: string) => void;
 }) {
   const { t } = useI18n();
   const tripMin = estimateTripMin(origin, dest);
@@ -246,8 +249,14 @@ function Itinerary({ origin, dest, mode, target, onPickRoute }: {
   // services that still arrive before the target.
   const searchFrom = mode === 'leave' ? target : new Date(target.getTime() - (tripMin + 30) * 60_000);
   const at = stableNow(searchFrom);
-  const depQ = useDepartures(origin.stop_id, at, 30);
-  const deps = depQ.data?.departures ?? [];
+  // 100 = API maximum: after keeping only the lines that reach the
+  // destination there must still be enough departures to choose from.
+  const depQ = useDepartures(origin.stop_id, at, 100);
+  const allDeps = depQ.data?.departures ?? [];
+  const deps = useMemo(
+    () => (lines ? allDeps.filter((d) => lines.has(lineKey(d.route_id, d.direction_id))) : allDeps),
+    [allDeps, lines],
+  );
 
   const targetMs = target.getTime();
   const results = useMemo(() => {

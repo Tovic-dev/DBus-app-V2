@@ -106,3 +106,19 @@ export interface DeparturesResponse {
   limit: number;
   departures: ScheduledDeparture[];
 }
+/** GET /stops/{id}/reachable — destinations reachable without a transfer. */
+export interface ReachableLine {
+  route_id: string;
+  direction_id: number | null;
+}
+
+export interface ReachableDestination {
+  stop_id: string;
+  lines: ReachableLine[];
+}
+
+export interface ReachableResponse {
+  stop_id: string;
+  route_ids: string[];
+  destinations: ReachableDestination[];
+}

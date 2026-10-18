@@ -1,4 +1,4 @@
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { queryKeys } from '../query/keys';
 import {
@@ -12,6 +12,7 @@ import {
   fetchRouteTrips,
   fetchRouteShape,
   fetchSearch,
+  fetchReachable,
 } from '../api/endpoints';
 
 /** Stale time for static data (stops, routes, shapes, search). */
@@ -110,43 +111,44 @@ export function useSearch(query: string, limit = 20) {
 }
 
 /**
- * Reachable destinations from an origin stop (smart planner filtering).
+ * Destinations reachable from `originStopId` without changing bus, and the
+ * lines (route + direction) that get to each one.
  *
- * 1. Fetch the origin's departures → unique set of route_ids serving it.
- * 2. For each route, fetch its stop sequence (cached, static).
- * 3. Union all stop_ids, drop the origin itself.
- *
- * Reuses the existing departures + routeStops queries/cache — no new
- * endpoints, no duplicated logic. Returns `null` stopIds while loading.
+ * V2: one call to GET /stops/{id}/reachable, built from the whole timetable on
+ * the server. Before, it was derived from the next departures at the chosen
+ * time, so it returned nothing at night and missed less frequent lines.
  */
-export function useReachableStops(originStopId: string | null, at: string) {
-  const deps = useDepartures(originStopId ?? '', at, 60, Boolean(originStopId));
-
-  const routeIds = useMemo(
-    () => Array.from(new Set((deps.data?.departures ?? []).map((d) => d.route_id))),
-    [deps.data],
-  );
-
-  const routeStopsQueries = useQueries({
-    queries: routeIds.map((rid) => ({
-      queryKey: queryKeys.routeStops(rid),
-      queryFn: () => fetchRouteStops(rid),
-      staleTime: STATIC_STALE_TIME,
-      enabled: Boolean(originStopId),
-    })),
+export function useReachableStops(originStopId: string | null) {
+  const q = useQuery({
+    queryKey: queryKeys.reachable(originStopId ?? ''),
+    queryFn: () => fetchReachable(originStopId as string),
+    enabled: Boolean(originStopId),
+    staleTime: STATIC_STALE_TIME,
   });
 
-  const stopIds = useMemo(() => {
-    if (!originStopId) return null;
-    const set = new Set<string>();
-    routeStopsQueries.forEach((q) => (q.data?.stops ?? []).forEach((s) => set.add(s.stop_id)));
-    set.delete(originStopId);
-    return set;
-  }, [routeStopsQueries, originStopId]);
+  const { stopIds, linesByStop } = useMemo(() => {
+    if (!originStopId || !q.data) return { stopIds: null, linesByStop: null };
+    const ids = new Set<string>();
+    const lines = new Map<string, Set<string>>();
+    for (const d of q.data.destinations) {
+      ids.add(d.stop_id);
+      lines.set(d.stop_id, new Set(d.lines.map((l) => lineKey(l.route_id, l.direction_id))));
+    }
+    return { stopIds: ids, linesByStop: lines };
+  }, [q.data, originStopId]);
 
   return {
-    routeIds,
+    routeIds: q.data?.route_ids ?? [],
+    /** null while loading or on error → callers fall back to "all stops". */
     stopIds,
-    isLoading: Boolean(originStopId) && (deps.isLoading || routeStopsQueries.some((q) => q.isLoading)),
+    /** Lines (route|direction) going from the origin to `destStopId`, or null if unknown. */
+    linesTo: (destStopId: string): Set<string> | null => linesByStop?.get(destStopId) ?? null,
+    isLoading: Boolean(originStopId) && q.isLoading,
+    isError: q.isError,
   };
+}
+
+/** Key identifying a line in one direction, e.g. "28|0". */
+export function lineKey(routeId: string, directionId: number | null | undefined): string {
+  return `${routeId}|${directionId ?? ''}`;
 }

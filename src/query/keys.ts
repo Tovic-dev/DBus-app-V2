@@ -12,6 +12,7 @@ export const queryKeys = {
     ['departures', stopId, at, limit] as const,
   routes: () => ['routes'] as const,
   route: (routeId: string) => ['route', routeId] as const,
+  reachable: (stopId: string) => ['reachable', stopId] as const,
   routeStops: (routeId: string, direction?: number) =>
     ['routeStops', routeId, direction] as const,
   routeTrips: (routeId: string, serviceDate: string) =>

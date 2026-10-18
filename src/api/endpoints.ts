@@ -10,6 +10,7 @@ import type {
   StopsResponse,
   RoutesResponse,
   DeparturesResponse,
+  ReachableResponse,
 } from './types';
 
 // ---- Stops ----
@@ -42,6 +43,11 @@ export function fetchDepartures(
   limit = 20,
 ): Promise<DeparturesResponse> {
   return apiGet<DeparturesResponse>(`/stops/${stopId}/departures`, { at, limit });
+}
+
+/** Stops reachable from `stopId` without changing bus (time-independent). */
+export function fetchReachable(stopId: string): Promise<ReachableResponse> {
+  return apiGet<ReachableResponse>(`/stops/${stopId}/reachable`);
 }
 
 // ---- Routes ----
