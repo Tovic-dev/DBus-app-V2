@@ -1,39 +1,27 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-import { I18nProvider, useI18n } from '../src/i18n';
+import { I18nProvider } from '../src/i18n';
 import { QueryProvider } from '../src/query/provider';
-import { colors } from '../src/design/tokens';
+import { BRAND_TINT } from '../src/ui/TabStack';
+import { C } from '../src/ui/theme';
 
 /**
- * V2 · Native UINavigationController headers: system back chevron (no
- * text, iOS 26 style), brand tint and translated titles. Colours and the
- * header material follow the system light/dark appearance automatically.
+ * Root stack: the tab controller, plus Ajustes presented as a page sheet.
+ * Detail screens live inside each tab's own stack (see src/ui/TabStack).
  */
-function RootStack() {
-  const { t } = useI18n();
-  return (
-    <Stack
-      screenOptions={{
-        headerBackButtonDisplayMode: 'minimal',
-        headerTintColor: colors.primary,
-        headerShadowVisible: false,
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="stops/[stopId]" options={{ title: t('nav_stop') }} />
-      <Stack.Screen name="routes/[routeId]" options={{ title: t('nav_route') }} />
-      <Stack.Screen name="live/[routeId]" options={{ title: t('nav_live') }} />
-    </Stack>
-  );
-}
-
 export default function RootLayout() {
   return (
     <I18nProvider>
       <QueryProvider>
         <StatusBar style="auto" />
-        <RootStack />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="settings"
+            options={{ presentation: 'modal', headerShown: true, headerTintColor: BRAND_TINT, headerShadowVisible: false, headerTransparent: true }}
+          />
+        </Stack>
       </QueryProvider>
     </I18nProvider>
   );

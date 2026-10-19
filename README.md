@@ -23,6 +23,20 @@ This document describes **what exists in this folder today**. Where behaviour is
 
 ---
 
+## Rediseño 2.0 (estilo Apple)
+
+La interfaz se ha rehecho con componentes nativos de iOS para que se comporte como una app de Apple:
+
+| Área | Cómo está hecho |
+|---|---|
+| Navegación | `NativeTabs` (Inicio, Mapa, Viaje, Favoritos + pestaña de búsqueda del sistema) con una pila nativa por pestaña y títulos grandes (`src/ui/TabStack.tsx`). Las fichas de parada y línea se abren dentro de la pestaña actual (`app/(tabs)/(grupo)/stop`, `route`). |
+| Colores | Colores semánticos de UIKit con `PlatformColor` (`src/ui/theme.ts`); el verde DBus es el único color de marca. |
+| Listas | Listas agrupadas tipo Ajustes (`src/ui/List.tsx`), deslizar para borrar en Favoritos, tirar para actualizar. |
+| Mapa | Puntos de parada solo al acercar el mapa, botón de ubicación en Liquid Glass y ficha de parada como hoja nativa con detents. |
+| Viaje | Control segmentado nativo (`@expo/ui`), selector de fecha compacto y selector de paradas con barra de búsqueda nativa. El filtro de destinos alcanzables solo se aplica al destino. |
+| Ajustes | Hoja modal desde el engranaje de Inicio: idioma (español, euskera, inglés) e información de los datos. |
+| Icono | `assets/icon*.png` con variantes clara, oscura y tintada. |
+
 ## Short description
 
 A native-style mobile app that shows DBus scheduled (GTFS) times. It finds the stop nearest to the device, shows upcoming departures, renders stops and lines on an interactive map, builds a single-line itinerary between two stops, and stores favourite stops/routes and recent searches on-device. **Realtime bus positions are not available** — the backend only serves the static timetable and every departure reports `realtime_status = "unavailable"`.

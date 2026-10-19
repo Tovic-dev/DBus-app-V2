@@ -1,0 +1,7 @@
+import { TabStack } from '../../../src/ui/TabStack';
+import { useI18n } from '../../../src/i18n';
+
+export default function SearchLayout() {
+  const { t } = useI18n();
+  return <TabStack title={t('tab_search')} />;
+}

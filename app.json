@@ -7,13 +7,23 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "scheme": "dbus-app",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tovicdev.dbus"
+      "bundleIdentifier": "com.tovicdev.dbus",
+      "icon": {
+        "light": "./assets/icon.png",
+        "dark": "./assets/icon-dark.png",
+        "tinted": "./assets/icon-tinted.png"
+      },
+      "infoPlist": {
+        "CFBundleDisplayName": "DBus",
+        "CFBundleLocalizations": [
+          "es",
+          "eu",
+          "en"
+        ],
+        "CFBundleDevelopmentRegion": "es"
+      }
     },
     "android": {
       "package": "com.tovicdev.dbus"
@@ -23,13 +33,27 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "DBus usa tu ubicación para mostrar las paradas más cercanas."
+          "locationWhenInUsePermission": "DBus usa tu ubicación para mostrarte las paradas cercanas y sus próximas salidas."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
     ],
     "experiments": {
       "tsconfigPaths": true
-    }
+    },
+    "icon": "./assets/icon.png"
   }
 }

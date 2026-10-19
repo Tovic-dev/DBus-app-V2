@@ -48,7 +48,20 @@ export type SFSymbolName =
   | 'questionmark.circle'
   | 'info.circle'
   | 'bus.fill'
-  | 'arrow.left.arrow.right';
+  | 'arrow.left.arrow.right'
+  | 'gearshape'
+  | 'location'
+  | 'location.slash'
+  | 'xmark'
+  | 'checkmark'
+  | 'trash'
+  | 'exclamationmark.triangle'
+  | 'heart.slash'
+  | 'mappin.and.ellipse'
+  | 'signpost.right'
+  | 'point.topleft.down.to.point.bottomright.curvepath'
+  | 'calendar'
+  | 'chevron.backward';
 
 /** Android-only fallback: SF Symbol -> closest Ionicons glyph. */
 const FALLBACK: Record<SFSymbolName, keyof typeof Ionicons.glyphMap> = {
@@ -83,6 +96,19 @@ const FALLBACK: Record<SFSymbolName, keyof typeof Ionicons.glyphMap> = {
   'info.circle': 'information-circle',
   'bus.fill': 'bus',
   'arrow.left.arrow.right': 'swap-horizontal',
+  gearshape: 'settings-outline',
+  location: 'navigate-outline',
+  'location.slash': 'navigate-outline',
+  xmark: 'close',
+  checkmark: 'checkmark',
+  trash: 'trash-outline',
+  'exclamationmark.triangle': 'warning-outline',
+  'heart.slash': 'heart-dislike-outline',
+  'mappin.and.ellipse': 'location-outline',
+  'signpost.right': 'trail-sign-outline',
+  'point.topleft.down.to.point.bottomright.curvepath': 'git-branch-outline',
+  calendar: 'calendar-outline',
+  'chevron.backward': 'chevron-back',
 };
 
 export interface SFSymbolIconProps {

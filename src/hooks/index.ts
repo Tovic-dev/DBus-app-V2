@@ -39,10 +39,10 @@ export function useStop(stopId: string) {
   });
 }
 
-export function useNearbyStops(lat: number, lon: number, radiusM = 500, limit = 20) {
+export function useNearbyStops(lat: number | undefined, lon: number | undefined, radiusM = 500, limit = 20) {
   return useQuery({
-    queryKey: queryKeys.nearbyStops(lat, lon, radiusM, limit),
-    queryFn: () => fetchNearbyStops(lat, lon, radiusM, limit),
+    queryKey: queryKeys.nearbyStops(lat ?? 0, lon ?? 0, radiusM, limit),
+    queryFn: () => fetchNearbyStops(lat as number, lon as number, radiusM, limit),
     staleTime: STATIC_STALE_TIME,
     enabled: lat !== undefined && lon !== undefined,
   });
@@ -53,6 +53,9 @@ export function useDepartures(stopId: string, at: string, limit = 20, enabled = 
     queryKey: queryKeys.departures(stopId, at, limit),
     queryFn: () => fetchDepartures(stopId, at, limit),
     staleTime: DEPARTURES_STALE_TIME,
+    // Keep the previous minute's list on screen while the next one loads, so
+    // the once-a-minute key change never flashes a spinner.
+    placeholderData: (prev) => prev,
     enabled,
   });
 }

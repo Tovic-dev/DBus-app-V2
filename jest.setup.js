@@ -24,3 +24,39 @@ jest.mock('@testing-library/react-native', () => {
       actual.render(ReactLocal.createElement(I18nProvider, null, ui), ...rest),
   };
 });
+
+// Native-only UI modules used by the redesigned screens.
+jest.mock(
+  '@expo/ui/community/segmented-control',
+  () => {
+    const ReactLocal = require('react');
+    const { Text, View } = require('react-native');
+    return {
+      SegmentedControl: ({ values = [], onChange }) =>
+        ReactLocal.createElement(
+          View,
+          { accessibilityRole: 'tablist' },
+          values.map((v, i) =>
+            ReactLocal.createElement(
+              Text,
+              { key: v, onPress: () => onChange && onChange({ nativeEvent: { selectedSegmentIndex: i, value: v } }) },
+              v,
+            ),
+          ),
+        ),
+    };
+  },
+  { virtual: true },
+);
+jest.mock('expo-glass-effect', () => {
+  const { View } = require('react-native');
+  return { GlassView: View, isLiquidGlassAvailable: () => false };
+});
+jest.mock('@react-native-community/datetimepicker', () => () => null);
+jest.mock('react-native-maps', () => {
+  const ReactLocal = require('react');
+  const { View } = require('react-native');
+  const MapView = ReactLocal.forwardRef((props, _ref) => ReactLocal.createElement(View, props));
+  const Marker = (props) => ReactLocal.createElement(View, props);
+  return { __esModule: true, default: MapView, Marker };
+});
